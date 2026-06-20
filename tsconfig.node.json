@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "skipLibCheck": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    // Los proyectos `composite` deben emitir; redirigimos a una carpeta temporal
+    // para no ensuciar la raíz ni que Vite confunda vite.config.js con el .ts.
+    "outDir": "./node_modules/.tmp/tsnode",
+    "tsBuildInfoFile": "./node_modules/.tmp/tsnode/node.tsbuildinfo"
+  },
+  "include": ["vite.config.ts"]
+}

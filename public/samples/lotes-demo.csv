@@ -1,0 +1,19 @@
+lote_id;estado;precio;financiamiento;cliente
+A-1;Disponible;18500;Financiamiento Directo;
+A-2;Vendido;19200;Contado;Juan Pérez
+A-3;Vendido;21000;Financiamiento Directo;María Gómez
+A-4;Reservado;17800;Financiamiento Directo;Pedro Salas
+A-5;Disponible;20500;Financiamiento Directo;
+A-6;Bloqueado;18900;;
+A-7;Vendido;22500;Contado;Ana Torres
+A-8;Disponible;16500;Financiamiento Directo;
+A-9;Reservado;19800;Contado;Luis Vega
+A-10;Vendido;15900;Financiamiento Directo;Rosa Díaz
+M-1;Disponible;24000;Financiamiento Directo;
+M-2;Vendido;25500;Contado;Elena Mora
+M-3;Separado;28000;Financiamiento Directo;Carlos Ruiz
+M-4;Disponible;23800;Financiamiento Directo;
+M-5;Reservado;22900;Financiamiento Directo;Sofía Lara
+M-6;Vendido;26100;Contado;Diego Núñez
+M-7;Disponible;24700;Financiamiento Directo;
+M-8;Vendido;29500;Financiamiento Directo;Marta Ríos
