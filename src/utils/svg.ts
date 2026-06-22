@@ -8,7 +8,7 @@ import { nrm, type Dimension } from '@/config/lotStatus';
  */
 
 const SKIP_FILL = new Set(['text', 'tspan', 'defs', 'style']);
-const ID_PREFIXES = ['lote', 'lot', 'l', 'id', 'mz', 'manzana', 'lt', 'parcela'];
+const ID_PREFIXES = ['fill', 'lote', 'lot', 'l', 'id', 'mz', 'manzana', 'lt', 'parcela'];
 
 /** Construye un índice normalizado de los elementos con id del SVG. */
 export function buildSvgIndex(svg: SVGElement): Map<string, SVGElement> {
