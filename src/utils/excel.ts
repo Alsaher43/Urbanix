@@ -20,10 +20,15 @@ function detectColumn(headers: string[], keywords: string[]): string | null {
 }
 
 const DETECT = {
-  id: ['lote_id', 'id', 'lote', 'cod', 'num', 'manz', 'lot', 'nro'],
+  id: ['lote_id', 'id', 'lote', 'cod', 'num', 'lot', 'nro'],
   estado: ['estado', 'status', 'condicion', 'disponib', 'situacion'],
   precio: ['precio', 'price', 'valor', 'monto'],
   financiamiento: ['financ', 'pago', 'modalidad'],
+  subcategoria: ['subestado', 'subcategoria', 'subtipo', 'categoria'],
+  descuento: ['descuento', 'dscto', 'rebaja'],
+  area: ['area', 'm2', 'metraje', 'superficie'],
+  manzana: ['manzana', 'manz', 'mz'],
+  etapa: ['etapa', 'fase', 'stage', 'sector'],
 };
 
 export interface DetectedColumns {
@@ -31,6 +36,11 @@ export interface DetectedColumns {
   estado: string | null;
   precio: string | null;
   financiamiento: string | null;
+  subcategoria: string | null;
+  descuento: string | null;
+  area: string | null;
+  manzana: string | null;
+  etapa: string | null;
 }
 
 export interface ParseResult {
@@ -51,7 +61,11 @@ export async function parseSpreadsheet(buffer: ArrayBuffer, fileName = ''): Prom
   const XLSX = await loadXLSX();
   const workbook = XLSX.read(buffer, { type: 'array' });
   const sheetName = workbook.SheetNames[0];
-  const empty: ParseResult = { lots: [], columns: { id: null, estado: null, precio: null, financiamiento: null }, headers: [], warnings: [] };
+  const noCols: DetectedColumns = {
+    id: null, estado: null, precio: null, financiamiento: null,
+    subcategoria: null, descuento: null, area: null, manzana: null, etapa: null,
+  };
+  const empty: ParseResult = { lots: [], columns: noCols, headers: [], warnings: [] };
   if (!sheetName) return { ...empty, warnings: ['El archivo no contiene hojas.'] };
 
   const raw = XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[sheetName], { defval: '' });
@@ -72,13 +86,19 @@ export async function parseSpreadsheet(buffer: ArrayBuffer, fileName = ''): Prom
     estado: detectColumn(headers, DETECT.estado) ?? headers[Math.min(1, headers.length - 1)] ?? null,
     precio: detectColumn(headers, DETECT.precio),
     financiamiento: detectColumn(headers, DETECT.financiamiento),
+    subcategoria: detectColumn(headers, DETECT.subcategoria),
+    descuento: detectColumn(headers, DETECT.descuento),
+    area: detectColumn(headers, DETECT.area),
+    manzana: detectColumn(headers, DETECT.manzana),
+    etapa: detectColumn(headers, DETECT.etapa),
   };
 
   const warnings: string[] = [];
   if (!columns.id) warnings.push('No se detectó la columna de identificador del lote.');
   if (!columns.estado) warnings.push('No se detectó la columna de estado.');
 
-  const knownCols = new Set([columns.id, columns.estado, columns.precio, columns.financiamiento].filter(Boolean) as string[]);
+  const knownCols = new Set(Object.values(columns).filter(Boolean) as string[]);
+  const cell = (row: Record<string, string>, col: string | null) => (col ? row[col]?.trim() || '' : '');
 
   const lots: Lot[] = rows
     .map((row) => {
@@ -90,9 +110,14 @@ export async function parseSpreadsheet(buffer: ArrayBuffer, fileName = ''): Prom
       });
       return {
         id,
-        estado: columns.estado ? row[columns.estado] || '' : '',
-        financiamiento: columns.financiamiento ? row[columns.financiamiento] || null : null,
+        estado: cell(row, columns.estado),
+        financiamiento: cell(row, columns.financiamiento) || null,
         precio: columns.precio ? toNumber(row[columns.precio]) : null,
+        subcategoria: cell(row, columns.subcategoria) || null,
+        descuento: columns.descuento ? toNumber(row[columns.descuento]) : null,
+        area: columns.area ? toNumber(row[columns.area]) : null,
+        manzana: cell(row, columns.manzana) || null,
+        etapa: cell(row, columns.etapa) || null,
         extra,
       } as Lot;
     })

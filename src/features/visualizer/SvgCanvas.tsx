@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ZoomIn, ZoomOut, Maximize2, Locate } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize2, Locate, RotateCcw, RotateCw, Maximize, Minimize } from 'lucide-react';
 import type { Lot } from '@/types';
 import type { Dimension } from '@/config/lotStatus';
 import { applyLotColors } from '@/utils/svg';
@@ -23,6 +23,7 @@ export function SvgCanvas({
   activeValues,
   onSelect,
   onHover,
+  fullscreenTargetRef,
 }: {
   svgText: string;
   lots: Lot[];
@@ -32,11 +33,16 @@ export function SvgCanvas({
   activeValues?: Set<string> | null;
   onSelect: (id: string | null) => void;
   onHover: (payload: { id: string; x: number; y: number } | null) => void;
+  /** Elemento a poner en pantalla completa (p. ej. lienzo + leyenda). Por defecto el propio lienzo. */
+  fullscreenTargetRef?: React.RefObject<HTMLElement>;
 }) {
+  const rootRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const svgHostRef = useRef<HTMLDivElement>(null);
   const [transform, setTransform] = useState<Transform>({ scale: 1, x: 0, y: 0 });
+  const [rotation, setRotation] = useState(0);
   const [panning, setPanning] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const panState = useRef({ active: false, sx: 0, sy: 0, ox: 0, oy: 0 });
 
   // Inyecta el SVG una vez por contenido.
@@ -80,6 +86,16 @@ export function SvgCanvas({
     }
   }, [svgText, lots, dimension, colorFor, selected, activeValues]);
 
+  const fsTarget = () => fullscreenTargetRef?.current ?? rootRef.current;
+
+  // Sincroniza el estado de pantalla completa con el navegador.
+  useEffect(() => {
+    const onFsChange = () => setIsFullscreen(!!document.fullscreenElement && document.fullscreenElement === fsTarget());
+    document.addEventListener('fullscreenchange', onFsChange);
+    return () => document.removeEventListener('fullscreenchange', onFsChange);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fullscreenTargetRef]);
+
   const clampScale = (s: number) => Math.min(MAX_SCALE, Math.max(MIN_SCALE, s));
 
   const zoomAt = useCallback((factor: number, cx: number, cy: number) => {
@@ -95,7 +111,20 @@ export function SvgCanvas({
     zoomAt(e.deltaY < 0 ? 1.12 : 1 / 1.12, e.clientX - rect.left, e.clientY - rect.top);
   };
 
-  const reset = () => setTransform({ scale: 1, x: 0, y: 0 });
+  const reset = () => {
+    setTransform({ scale: 1, x: 0, y: 0 });
+    setRotation(0);
+  };
+
+  const rotate = (deg: number) => setRotation((r) => r + deg);
+
+  const toggleFullscreen = () => {
+    if (document.fullscreenElement) {
+      void document.exitFullscreen();
+    } else {
+      void fsTarget()?.requestFullscreen?.();
+    }
+  };
 
   const onPointerDown = (e: React.PointerEvent) => {
     if (e.button !== 0) return;
@@ -132,7 +161,7 @@ export function SvgCanvas({
   };
 
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-xl border border-border bg-grid">
+    <div ref={rootRef} className="relative h-full w-full overflow-hidden rounded-xl border border-border bg-canvas bg-grid">
       <div
         ref={containerRef}
         className={cn('h-full w-full touch-none', panning ? 'cursor-grabbing' : 'cursor-grab')}
@@ -150,10 +179,16 @@ export function SvgCanvas({
             transition: panning ? 'none' : 'transform 0.08s linear',
           }}
         >
-          <div ref={svgHostRef} className="flex h-full w-full items-center justify-center p-6" />
+          {/* Capa de rotación independiente: no interfiere con el zoom/pan. */}
+          <div
+            ref={svgHostRef}
+            className="flex h-full w-full items-center justify-center p-6"
+            style={{ transform: `rotate(${rotation}deg)`, transition: 'transform 0.25s cubic-bezier(0.4,0,0.2,1)' }}
+          />
         </div>
       </div>
 
+      {/* Controles */}
       <div className="absolute bottom-4 right-4 flex flex-col gap-1.5 rounded-lg border border-border bg-surface/90 p-1 shadow-md backdrop-blur">
         <ControlBtn onClick={() => zoomAt(1.25, (containerRef.current?.clientWidth ?? 0) / 2, (containerRef.current?.clientHeight ?? 0) / 2)} label="Acercar">
           <ZoomIn className="h-4 w-4" />
@@ -161,14 +196,26 @@ export function SvgCanvas({
         <ControlBtn onClick={() => zoomAt(1 / 1.25, (containerRef.current?.clientWidth ?? 0) / 2, (containerRef.current?.clientHeight ?? 0) / 2)} label="Alejar">
           <ZoomOut className="h-4 w-4" />
         </ControlBtn>
+        <div className="my-0.5 h-px bg-border" />
+        <ControlBtn onClick={() => rotate(-90)} label="Rotar a la izquierda">
+          <RotateCcw className="h-4 w-4" />
+        </ControlBtn>
+        <ControlBtn onClick={() => rotate(90)} label="Rotar a la derecha">
+          <RotateCw className="h-4 w-4" />
+        </ControlBtn>
         <ControlBtn onClick={reset} label="Restablecer vista">
           <Maximize2 className="h-4 w-4" />
+        </ControlBtn>
+        <div className="my-0.5 h-px bg-border" />
+        <ControlBtn onClick={toggleFullscreen} label={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}>
+          {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
         </ControlBtn>
       </div>
 
       <div className="pointer-events-none absolute bottom-4 left-4 flex items-center gap-1.5 rounded-md bg-surface/90 px-2.5 py-1.5 text-2xs font-medium text-content-3 shadow-sm backdrop-blur">
         <Locate className="h-3.5 w-3.5" />
         {Math.round(transform.scale * 100)}%
+        {rotation % 360 !== 0 && <span className="ml-1 text-content-2">· {((rotation % 360) + 360) % 360}°</span>}
       </div>
     </div>
   );

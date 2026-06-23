@@ -42,6 +42,12 @@ export const KNOWN_COLORS: Record<string, string> = {
   directo: '#3B82F6',
   financiamientodirecto: '#3B82F6',
   financiamiento: '#3B82F6',
+  // Subcategorías de financiamiento (crédito)
+  credito: '#6366F1',
+  creditodirecto: '#3B82F6',
+  creditobancario: '#0891B2',
+  financiamientopropio: '#8B5CF6',
+  financiamientobancario: '#0EA5E9',
 };
 
 /** Paleta determinista de respaldo para valores no reconocidos. */
@@ -85,6 +91,10 @@ export const EDITABLE_LEGEND: { dimension: Dimension; label: string; sample: str
   { dimension: 'estado', label: 'Bloqueado', sample: 'bloqueado' },
   { dimension: 'financiamiento', label: 'Contado', sample: 'contado' },
   { dimension: 'financiamiento', label: 'Financiamiento Directo', sample: 'directo' },
+  { dimension: 'financiamiento', label: 'Crédito Directo', sample: 'credito directo' },
+  { dimension: 'financiamiento', label: 'Crédito Bancario', sample: 'credito bancario' },
+  { dimension: 'financiamiento', label: 'Financiamiento Propio', sample: 'financiamiento propio' },
+  { dimension: 'financiamiento', label: 'Financiamiento Bancario', sample: 'financiamiento bancario' },
 ];
 
 /** ¿El estado cuenta como disponible (no colocado)? */

@@ -1,6 +1,6 @@
 import type { Lot } from '@/types';
 import { prettyLabel } from '@/config/lotStatus';
-import { formatCurrency } from '@/lib/format';
+import { formatCurrency, formatNumber } from '@/lib/format';
 
 const esc = (v: unknown) => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -35,14 +35,14 @@ export function exportLotsToPdf(
       return set;
     }, new Set<string>()),
   );
-  const headers = ['Lote', 'Estado', 'Financiamiento', 'Precio', ...extraKeys];
+  const headers = ['Lote', 'Estado', 'Financiamiento', 'Precio', 'Descuento', 'Área', 'Manzana', 'Etapa', ...extraKeys];
 
   const LIMIT = 1500;
   const shown = lots.slice(0, LIMIT);
   const rows = shown
     .map(
       (l) =>
-        `<tr><td><b>${esc(l.id)}</b></td><td><span class="dot" style="background:${colorFor(l.estado)}"></span>${esc(prettyLabel(l.estado))}</td><td>${l.financiamiento ? esc(prettyLabel(l.financiamiento)) : '—'}</td><td>${l.precio != null ? esc(formatCurrency(l.precio)) : '—'}</td>${extraKeys.map((k) => `<td>${esc(l.extra[k] ?? '')}</td>`).join('')}</tr>`,
+        `<tr><td><b>${esc(l.id)}</b></td><td><span class="dot" style="background:${colorFor(l.estado)}"></span>${esc(prettyLabel(l.estado))}</td><td>${l.financiamiento ? esc(prettyLabel(l.financiamiento)) : '—'}</td><td>${l.precio != null ? esc(formatCurrency(l.precio)) : '—'}</td><td>${l.descuento ? esc(formatCurrency(l.descuento)) : '—'}</td><td>${l.area != null ? esc(formatNumber(l.area)) : '—'}</td><td>${esc(l.manzana ?? '—')}</td><td>${esc(l.etapa ?? '—')}</td>${extraKeys.map((k) => `<td>${esc(l.extra[k] ?? '')}</td>`).join('')}</tr>`,
     )
     .join('');
   const trunc = total > LIMIT ? `<div class="nt">Mostrando ${LIMIT} de ${total} lotes. Usa CSV para el listado completo.</div>` : '';

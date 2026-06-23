@@ -15,13 +15,18 @@ export function exportLotsToCsv(lots: Lot[], fileName = 'urbanix-lotes.csv'): vo
     }, new Set<string>()),
   );
 
-  const headers = ['Lote', 'Estado', 'Financiamiento', 'Precio', ...extraKeys];
+  const headers = ['Lote', 'Estado', 'Financiamiento', 'Subcategoria', 'Precio', 'Descuento', 'Area', 'Manzana', 'Etapa', ...extraKeys];
   const rows = lots.map((l) =>
     [
       l.id,
       l.estado,
       l.financiamiento ?? '',
+      l.subcategoria ?? '',
       l.precio ?? '',
+      l.descuento ?? '',
+      l.area ?? '',
+      l.manzana ?? '',
+      l.etapa ?? '',
       ...extraKeys.map((k) => l.extra[k] ?? ''),
     ]
       .map(escapeCell)

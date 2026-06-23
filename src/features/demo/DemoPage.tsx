@@ -3,12 +3,13 @@ import { Link } from 'react-router-dom';
 import { LayoutGrid, CheckCircle2, Home, TrendingUp, ArrowLeft, Sparkles } from 'lucide-react';
 import { SvgCanvas } from '@/features/visualizer/SvgCanvas';
 import { LegendPanel } from '@/features/visualizer/LegendPanel';
+import { LotTooltip } from '@/features/visualizer/LotTooltip';
 import { buildLegendValues } from '@/features/visualizer/legendValues';
 import { KpiCard } from '@/features/dashboard/KpiCard';
 import { StatusDistribution } from '@/features/dashboard/StatusDistribution';
 import { computeLotStats } from '@/hooks/useActiveData';
 import { useColorFor } from '@/store/legendStore';
-import { nrm, prettyLabel, ESTADO_ORDER, FINANCIAMIENTO_OPTIONS, uniqueByNorm, type Dimension } from '@/config/lotStatus';
+import { nrm, ESTADO_ORDER, FINANCIAMIENTO_OPTIONS, uniqueByNorm, type Dimension } from '@/config/lotStatus';
 import type { Lot } from '@/types';
 import { Card, CardHeader, CardBody } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -116,17 +117,7 @@ export function DemoPage() {
                 onHover={setHover}
               />
               {hover && hoverLot && (
-                <div
-                  className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-[calc(100%+12px)] animate-fade-in rounded-lg border border-border bg-surface px-3 py-2 shadow-lg"
-                  style={{ left: hover.x, top: hover.y }}
-                >
-                  <p className="text-sm font-bold text-content">{hoverLot.id}</p>
-                  <div className="mt-1 flex items-center gap-1.5">
-                    <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: colorFor(hoverLot.estado) }} />
-                    <span className="text-2xs text-content-2">{prettyLabel(hoverLot.estado)}</span>
-                  </div>
-                  {hoverLot.financiamiento && <p className="mt-0.5 text-2xs text-content-3">{prettyLabel(hoverLot.financiamiento)}</p>}
-                </div>
+                <LotTooltip lot={hoverLot} colorFor={colorFor} x={hover.x} y={hover.y} />
               )}
             </div>
           </div>

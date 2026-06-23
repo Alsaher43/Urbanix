@@ -88,12 +88,22 @@ export default {
         shimmer: {
           '100%': { transform: 'translateX(100%)' },
         },
+        float: {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-12px)' },
+        },
+        'float-slow': {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-20px)' },
+        },
       },
       animation: {
         'fade-in': 'fade-in 0.2s ease-out',
         'fade-in-up': 'fade-in-up 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
         'scale-in': 'scale-in 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
         'slide-in-right': 'slide-in-right 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+        float: 'float 6s ease-in-out infinite',
+        'float-slow': 'float-slow 9s ease-in-out infinite',
       },
     },
   },

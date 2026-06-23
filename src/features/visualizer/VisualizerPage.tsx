@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Map, PanelRightClose, PanelRightOpen, Layers, FileUp } from 'lucide-react';
 import { useActiveProject } from '@/hooks/useActiveProject';
@@ -13,8 +13,9 @@ import { Spinner } from '@/components/ui/Spinner';
 import { useSetLotStatus } from '@/hooks/useLotOverrides';
 import { SvgCanvas } from './SvgCanvas';
 import { LegendPanel } from './LegendPanel';
+import { LotTooltip } from './LotTooltip';
 import { buildLegendValues } from './legendValues';
-import { nrm, prettyLabel, ESTADO_ORDER, FINANCIAMIENTO_OPTIONS, uniqueByNorm, type Dimension } from '@/config/lotStatus';
+import { nrm, ESTADO_ORDER, FINANCIAMIENTO_OPTIONS, uniqueByNorm, type Dimension } from '@/config/lotStatus';
 import { cn } from '@/lib/cn';
 
 export function VisualizerPage() {
@@ -99,6 +100,8 @@ export function VisualizerPage() {
     />
   );
 
+  const fsRef = useRef<HTMLDivElement>(null);
+
   const togglePanel = () => {
     if (window.matchMedia('(min-width: 768px)').matches) setPanelOpen((o) => !o);
     else setMobileSheet((o) => !o);
@@ -136,7 +139,7 @@ export function VisualizerPage() {
           className="flex-1"
         />
       ) : (
-        <div className="flex min-h-0 flex-1 gap-4">
+        <div ref={fsRef} className="flex min-h-0 flex-1 gap-4 bg-canvas">
           <div className="relative min-w-0 flex-1">
             {isLoadingSvg || !svgText ? (
               <div className="flex h-full items-center justify-center rounded-xl border border-border bg-surface">
@@ -153,21 +156,10 @@ export function VisualizerPage() {
                   activeValues={activeValues}
                   onSelect={setSelected}
                   onHover={setHover}
+                  fullscreenTargetRef={fsRef}
                 />
                 {hover && hoverLot && (
-                  <div
-                    className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-[calc(100%+12px)] rounded-lg border border-border bg-surface px-3 py-2 shadow-lg animate-fade-in"
-                    style={{ left: hover.x, top: hover.y }}
-                  >
-                    <p className="text-sm font-bold text-content">{hoverLot.id}</p>
-                    <div className="mt-1 flex items-center gap-1.5">
-                      <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: colorFor(hoverLot.estado) }} />
-                      <span className="text-2xs text-content-2">{prettyLabel(hoverLot.estado)}</span>
-                    </div>
-                    {hoverLot.financiamiento && (
-                      <p className="mt-0.5 text-2xs text-content-3">{prettyLabel(hoverLot.financiamiento)}</p>
-                    )}
-                  </div>
+                  <LotTooltip lot={hoverLot} colorFor={colorFor} x={hover.x} y={hover.y} />
                 )}
                 {!hasExcel && (
                   <div className="absolute left-4 top-4 rounded-md border border-warning/30 bg-warning/10 px-3 py-1.5 text-2xs font-medium text-warning">
@@ -178,10 +170,10 @@ export function VisualizerPage() {
             )}
           </div>
 
-          {/* Panel lateral (escritorio) */}
+          {/* Panel lateral flotante (escritorio · glass · visible en pantalla completa) */}
           <aside
             className={cn(
-              'hidden shrink-0 overflow-hidden rounded-xl border border-border bg-surface transition-all duration-200 ease-smooth md:block',
+              'glass hidden shrink-0 overflow-y-auto rounded-xl border border-border shadow-lg transition-all duration-200 ease-smooth md:block',
               panelOpen ? 'w-full max-w-xs p-4' : 'w-0 border-0 p-0',
             )}
           >

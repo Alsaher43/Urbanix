@@ -1,4 +1,5 @@
 import type { Lot } from '@/types';
+import { nrm } from '@/config/lotStatus';
 
 /**
  * Datos de ejemplo para el Modo Demo (sin backend). Una sola fuente genera el
@@ -42,13 +43,21 @@ const DEMO: DemoEntry[] = [
 ];
 
 export function getDemoLots(): Lot[] {
-  return DEMO.map((d) => ({
-    id: d.id,
-    estado: d.estado,
-    financiamiento: d.financiamiento,
-    precio: d.precio,
-    extra: { Cliente: d.cliente, Manzana: d.id.split('-')[0] },
-  }));
+  return DEMO.map((d) => {
+    const [manzana, numStr] = d.id.split('-');
+    const numero = Number(numStr) || 0;
+    return {
+      id: d.id,
+      estado: d.estado,
+      financiamiento: d.financiamiento,
+      precio: d.precio,
+      descuento: nrm(d.financiamiento) === 'contado' ? 800 : 0,
+      area: 120 + numero * 8,
+      manzana,
+      etapa: manzana === 'A' ? 'Etapa 1' : 'Etapa 2',
+      extra: { Cliente: d.cliente },
+    } satisfies Lot;
+  });
 }
 
 /** Genera un plano SVG de ejemplo; cada lote es una forma con id = lote_id. */

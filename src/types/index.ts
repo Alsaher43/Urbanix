@@ -89,6 +89,12 @@ export interface Lot {
   financiamiento: string | null;
   /** Precio numérico o null. */
   precio: number | null;
+  /** Campos opcionales detectados del Excel (todos retrocompatibles). */
+  subcategoria?: string | null;
+  descuento?: number | null;
+  area?: number | null;
+  manzana?: string | null;
+  etapa?: string | null;
   /** Todas las demás columnas del Excel, para no perder información. */
   extra: Record<string, string | number | null>;
 }

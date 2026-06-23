@@ -49,16 +49,17 @@
   }
 
   .dark {
-    --canvas: 9 9 13;
-    --surface: 18 19 26;
-    --surface-2: 24 25 33;
-    --surface-3: 31 33 42;
-    --border: 38 40 51;
-    --border-strong: 52 55 68;
+    /* Paleta azul oscura (navy) con más profundidad, estilo Valora premium. */
+    --canvas: 8 11 20;
+    --surface: 15 19 32;
+    --surface-2: 21 26 42;
+    --surface-3: 29 36 54;
+    --border: 36 44 64;
+    --border-strong: 54 64 88;
 
-    --content: 237 238 243;
-    --content-2: 158 163 176;
-    --content-3: 110 115 128;
+    --content: 233 237 245;
+    --content-2: 156 165 185;
+    --content-3: 109 119 140;
 
     --brand: 124 117 255;
     --brand-fg: 255 255 255;
@@ -174,5 +175,14 @@
       linear-gradient(rgb(var(--border) / 0.6) 1px, transparent 1px),
       linear-gradient(90deg, rgb(var(--border) / 0.6) 1px, transparent 1px);
     background-size: 28px 28px;
+  }
+}
+
+/* Accesibilidad: respeta a quienes piden menos movimiento (WCAG 2.3.3).
+   Desactiva las animaciones de flotación infinitas (login). */
+@media (prefers-reduced-motion: reduce) {
+  .animate-float,
+  .animate-float-slow {
+    animation: none !important;
   }
 }
