@@ -10,27 +10,45 @@ import { nrm } from '@/config/lotStatus';
 const SKIP_FILL = new Set(['text', 'tspan', 'defs', 'style']);
 const ID_PREFIXES = ['fill', 'lote', 'lot', 'l', 'id', 'mz', 'manzana', 'lt', 'parcela'];
 
-/** Construye un índice normalizado de los elementos con id del SVG. */
-export function buildSvgIndex(svg: SVGElement): Map<string, SVGElement> {
-  const map = new Map<string, SVGElement>();
+export interface SvgIndex {
+  /** Coincidencia exacta (minúsculas, preserva guiones) — prioritaria. */
+  exact: Map<string, SVGElement>;
+  /** Coincidencia laxa (normalizada) — para prefijos tipo FILL_. */
+  loose: Map<string, SVGElement>;
+}
+
+const lc = (s: string) => s.toLowerCase().trim();
+
+/** Construye índices (exacto + laxo) de los elementos con id del SVG. */
+export function buildSvgIndex(svg: SVGElement): SvgIndex {
+  const exact = new Map<string, SVGElement>();
+  const loose = new Map<string, SVGElement>();
   svg.querySelectorAll<SVGElement>('[id]').forEach((el) => {
     if (el.closest('defs') || el.closest('symbol')) return;
     const id = (el.id || '').trim();
-    if (id) map.set(nrm(id), el);
+    if (!id) return;
+    if (!exact.has(lc(id))) exact.set(lc(id), el);
+    const k = nrm(id);
+    if (k && !loose.has(k)) loose.set(k, el);
   });
-  return map;
+  return { exact, loose };
 }
 
-/** Encuentra el elemento del lote por id, con tolerancia a prefijos. */
-export function findLotElement(index: Map<string, SVGElement>, rawId: string): SVGElement | null {
+/**
+ * Encuentra el elemento del lote. Prioriza coincidencia EXACTA (preservando
+ * guiones, p. ej. "H1-12" ≠ "H11-2"); si no, usa la laxa con prefijos (FILL_…).
+ */
+export function findLotElement(index: SvgIndex, rawId: string): SVGElement | null {
+  const exact = index.exact.get(lc(rawId));
+  if (exact) return exact;
+
   const key = nrm(rawId);
   if (!key) return null;
-  if (index.has(key)) return index.get(key)!;
+  if (index.loose.has(key)) return index.loose.get(key)!;
   for (const p of ID_PREFIXES) {
-    if (index.has(p + key)) return index.get(p + key)!;
+    if (index.loose.has(p + key)) return index.loose.get(p + key)!;
   }
-  // último intento: id que termina igual quitando prefijos
-  for (const [k, el] of index) {
+  for (const [k, el] of index.loose) {
     if (k.replace(new RegExp('^(' + ID_PREFIXES.join('|') + ')'), '') === key) return el;
   }
   return null;
@@ -86,7 +104,7 @@ export function applyLotColors(
     el.style.strokeWidth = selected ? '2.5' : '';
   }
 
-  return { matched, total: lots.length, indexed: index.size };
+  return { matched, total: lots.length, indexed: index.exact.size };
 }
 
 /** Sanea un SVG subido por el usuario: elimina <script> y handlers on*. */
