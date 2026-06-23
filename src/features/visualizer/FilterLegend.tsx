@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
   Search, X, ChevronRight, ChevronDown, Minus, Maximize2, Tag, DollarSign, MapPin, Wallet,
-  CircleDot, Filter, Eraser,
+  CircleDot, Filter, Eraser, GripVertical,
 } from 'lucide-react';
 import type { Lot } from '@/types';
 import { nrm, prettyLabel } from '@/config/lotStatus';
@@ -45,6 +45,7 @@ export function FilterLegend({
   financiamientoOptions = [],
   onChangeEstado,
   onChangeFinanciamiento,
+  anchor = 'left',
 }: {
   lots: Lot[];
   colorFor: (value: string) => string;
@@ -60,9 +61,39 @@ export function FilterLegend({
   financiamientoOptions?: string[];
   onChangeEstado?: (value: string) => void;
   onChangeFinanciamiento?: (value: string) => void;
+  /** Lado donde se ancla por defecto (se puede arrastrar libremente). */
+  anchor?: 'left' | 'right';
 }) {
   const [minimized, setMinimized] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  // Arrastre: la leyenda flota y se puede mover desde su cabecera.
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ dx: 0, dy: 0 });
+  const drag = useRef({ active: false, sx: 0, sy: 0, ox: 0, oy: 0 });
+
+  const onDragStart = (e: React.PointerEvent) => {
+    if ((e.target as Element).closest('button, input, select')) return;
+    drag.current = { active: true, sx: e.clientX, sy: e.clientY, ox: pos.dx, oy: pos.dy };
+    (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
+  };
+  const onDragMove = (e: React.PointerEvent) => {
+    if (!drag.current.active) return;
+    let dx = drag.current.ox + (e.clientX - drag.current.sx);
+    let dy = drag.current.oy + (e.clientY - drag.current.sy);
+    const el = rootRef.current;
+    const parent = el?.offsetParent as HTMLElement | null;
+    if (el && parent) {
+      const minDx = -el.offsetLeft;
+      const maxDx = parent.clientWidth - el.offsetWidth - el.offsetLeft;
+      const minDy = -el.offsetTop;
+      const maxDy = parent.clientHeight - el.offsetHeight - el.offsetTop;
+      dx = Math.max(minDx, Math.min(maxDx, dx));
+      dy = Math.max(minDy, Math.min(maxDy, dy));
+    }
+    setPos({ dx, dy });
+  };
+  const onDragEnd = () => { drag.current.active = false; };
 
   // Conteos contextuales (estado, estado+ubicacion, financiamiento, cuotas en directo).
   const counts = useMemo(() => {
@@ -99,11 +130,24 @@ export function FilterLegend({
   };
 
   return (
-    <div className="glass flex max-h-full w-full flex-col overflow-hidden rounded-xl border border-border shadow-xl">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2.5">
+    <div
+      ref={rootRef}
+      className={cn(
+        'glass absolute top-3 z-10 flex max-h-[calc(100%-1.5rem)] w-80 max-w-[calc(100%-1.5rem)] flex-col overflow-hidden rounded-xl border border-border shadow-xl',
+        anchor === 'right' ? 'right-3' : 'left-3',
+      )}
+      style={{ transform: `translate(${pos.dx}px, ${pos.dy}px)` }}
+    >
+      {/* Header (asa de arrastre) */}
+      <div
+        className="flex cursor-move touch-none select-none items-center justify-between gap-2 border-b border-border px-3 py-2.5"
+        onPointerDown={onDragStart}
+        onPointerMove={onDragMove}
+        onPointerUp={onDragEnd}
+        onPointerCancel={onDragEnd}
+      >
         <span className="flex items-center gap-2 text-sm font-semibold text-content">
-          <Filter className="h-4 w-4 text-brand" /> Leyenda y filtros
+          <GripVertical className="h-4 w-4 text-content-3" /> Leyenda y filtros
           {totalActive > 0 && <Badge tone="brand">{totalActive}</Badge>}
         </span>
         <div className="flex items-center gap-0.5">

@@ -142,40 +142,38 @@ export function VisualizerPage() {
                 </div>
               )}
 
-              {/* Leyenda flotante sobre el plano (visible en pantalla completa) */}
+              {/* Leyenda flotante arrastrable sobre el plano (visible en pantalla completa) */}
               {panelOpen && (
-                <div className="absolute right-3 top-3 z-10 flex max-h-[calc(100%-1.5rem)] w-80 max-w-[calc(100%-1.5rem)] animate-fade-in">
-                  <FilterLegend
-                    lots={lots}
-                    colorFor={colorFor}
-                    facets={facets}
-                    onToggle={toggleFacet}
-                    onClear={clearFacets}
-                    search={search}
-                    onSearch={setSearch}
-                    selectedLot={selectedLot}
-                    onClearSelection={() => setSelected(null)}
-                    editable={isManager}
-                    estadoOptions={estadoOptions}
-                    financiamientoOptions={financiamientoOptions}
-                    onChangeEstado={
-                      canEdit
-                        ? (estado) => setStatus.mutate({ projectId: projectId!, loteId: selectedLot!.id, estado, prevEstado: selectedLot!.estado })
-                        : undefined
-                    }
-                    onChangeFinanciamiento={
-                      canEdit
-                        ? (financiamiento) =>
-                            setStatus.mutate({
-                              projectId: projectId!,
-                              loteId: selectedLot!.id,
-                              financiamiento: financiamiento || null,
-                              prevFinanciamiento: selectedLot!.financiamiento,
-                            })
-                        : undefined
-                    }
-                  />
-                </div>
+                <FilterLegend
+                  lots={lots}
+                  colorFor={colorFor}
+                  facets={facets}
+                  onToggle={toggleFacet}
+                  onClear={clearFacets}
+                  search={search}
+                  onSearch={setSearch}
+                  selectedLot={selectedLot}
+                  onClearSelection={() => setSelected(null)}
+                  editable={isManager}
+                  estadoOptions={estadoOptions}
+                  financiamientoOptions={financiamientoOptions}
+                  onChangeEstado={
+                    canEdit
+                      ? (estado) => setStatus.mutate({ projectId: projectId!, loteId: selectedLot!.id, estado, prevEstado: selectedLot!.estado })
+                      : undefined
+                  }
+                  onChangeFinanciamiento={
+                    canEdit
+                      ? (financiamiento) =>
+                          setStatus.mutate({
+                            projectId: projectId!,
+                            loteId: selectedLot!.id,
+                            financiamiento: financiamiento || null,
+                            prevFinanciamiento: selectedLot!.financiamiento,
+                          })
+                      : undefined
+                  }
+                />
               )}
             </>
           )}

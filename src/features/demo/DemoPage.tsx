@@ -122,24 +122,22 @@ export function DemoPage() {
             onHover={setHover}
           />
           {hover && hoverLot && <LotTooltip lot={hoverLot} colorFor={colorFor} x={hover.x} y={hover.y} />}
-          <div className="absolute right-3 top-3 z-10 flex max-h-[calc(100%-1.5rem)] w-80 max-w-[calc(100%-1.5rem)] animate-fade-in">
-            <FilterLegend
-              lots={lots}
-              colorFor={colorFor}
-              facets={facets}
-              onToggle={toggleFacet}
-              onClear={() => setFacets(emptyFacets())}
-              search={search}
-              onSearch={onSearch}
-              selectedLot={selectedLot}
-              onClearSelection={() => setSelected(null)}
-              editable={!!selectedLot}
-              estadoOptions={['Disponible', 'Vendido']}
-              financiamientoOptions={['Contado', 'Financiamiento directo']}
-              onChangeEstado={selectedLot ? (estado) => updateLot(selectedLot.id, { estado }) : undefined}
-              onChangeFinanciamiento={selectedLot ? (financiamiento) => updateLot(selectedLot.id, { financiamiento: financiamiento || null }) : undefined}
-            />
-          </div>
+          <FilterLegend
+            lots={lots}
+            colorFor={colorFor}
+            facets={facets}
+            onToggle={toggleFacet}
+            onClear={() => setFacets(emptyFacets())}
+            search={search}
+            onSearch={onSearch}
+            selectedLot={selectedLot}
+            onClearSelection={() => setSelected(null)}
+            editable={!!selectedLot}
+            estadoOptions={['Disponible', 'Vendido']}
+            financiamientoOptions={['Contado', 'Financiamiento directo']}
+            onChangeEstado={selectedLot ? (estado) => updateLot(selectedLot.id, { estado }) : undefined}
+            onChangeFinanciamiento={selectedLot ? (financiamiento) => updateLot(selectedLot.id, { financiamiento: financiamiento || null }) : undefined}
+          />
         </div>
 
         <Card className="mt-6">
