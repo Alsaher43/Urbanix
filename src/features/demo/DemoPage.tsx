@@ -1,21 +1,23 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { LayoutGrid, CheckCircle2, Home, TrendingUp, ArrowLeft, Sparkles } from 'lucide-react';
 import { SvgCanvas } from '@/features/visualizer/SvgCanvas';
-import { LegendPanel } from '@/features/visualizer/LegendPanel';
+import { FilterLegend, type Facets, type FacetKey } from '@/features/visualizer/FilterLegend';
 import { LotTooltip } from '@/features/visualizer/LotTooltip';
-import { buildLegendValues } from '@/features/visualizer/legendValues';
 import { KpiCard } from '@/features/dashboard/KpiCard';
 import { StatusDistribution } from '@/features/dashboard/StatusDistribution';
 import { computeLotStats } from '@/hooks/useActiveData';
 import { useColorFor } from '@/store/legendStore';
-import { nrm, ESTADO_ORDER, FINANCIAMIENTO_OPTIONS, uniqueByNorm, type Dimension } from '@/config/lotStatus';
-import type { Lot } from '@/types';
+import { nrm } from '@/config/lotStatus';
+import { lotField } from '@/utils/lotFields';
 import { Card, CardHeader, CardBody } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { getDemoLots, buildDemoSvg } from './demoData';
 import { formatNumber, formatPercent } from '@/lib/format';
+import type { Lot } from '@/types';
+
+const emptyFacets = (): Facets => ({ estado: new Set(), ubicacion: new Set(), financiamiento: new Set(), cuotas: new Set() });
 
 export function DemoPage() {
   const colorFor = useColorFor();
@@ -23,34 +25,14 @@ export function DemoPage() {
   const svgText = useMemo(() => buildDemoSvg(), []);
   const lotsByCode = useMemo(() => new Map(lots.map((l) => [l.id, l])), [lots]);
   const stats = useMemo(() => computeLotStats(lots), [lots]);
-  const estadoOptions = useMemo(() => uniqueByNorm([...ESTADO_ORDER, ...lots.map((l) => l.estado)]), [lots]);
-  const financiamientoOptions = useMemo(
-    () => uniqueByNorm([...FINANCIAMIENTO_OPTIONS, ...lots.map((l) => l.financiamiento)]),
-    [lots],
-  );
 
-  const updateLot = (id: string, patch: Partial<Lot>) =>
-    setLots((prev) => prev.map((l) => (l.id === id ? { ...l, ...patch } : l)));
-
-  const [dimension, setDimension] = useState<Dimension>('estado');
   const [selected, setSelected] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [hover, setHover] = useState<{ id: string; x: number; y: number } | null>(null);
-  const [activeValues, setActiveValues] = useState<Set<string>>(new Set());
+  const [facets, setFacets] = useState<Facets>(emptyFacets);
 
-  const values = useMemo(() => buildLegendValues(lots, dimension), [lots, dimension]);
-
-  useEffect(() => {
-    setActiveValues(new Set(values.map((v) => nrm(v.value))));
-  }, [values]);
-
-  const toggleValue = (value: string) =>
-    setActiveValues((prev) => {
-      const next = new Set(prev);
-      const k = nrm(value);
-      next.has(k) ? next.delete(k) : next.add(k);
-      return next.size === 0 ? new Set(values.map((v) => nrm(v.value))) : next;
-    });
+  const updateLot = (id: string, patch: Partial<Lot>) =>
+    setLots((prev) => prev.map((l) => (l.id === id ? { ...l, ...patch } : l)));
 
   const onSearch = (v: string) => {
     setSearch(v);
@@ -58,6 +40,30 @@ export function DemoPage() {
     const match = lots.find((l) => nrm(l.id) === q);
     if (match) setSelected(match.id);
   };
+
+  const toggleFacet = useCallback((facet: FacetKey, value: string) => {
+    const k = nrm(value);
+    setFacets((prev) => {
+      const next: Facets = {
+        estado: new Set(prev.estado), ubicacion: new Set(prev.ubicacion),
+        financiamiento: new Set(prev.financiamiento), cuotas: new Set(prev.cuotas),
+      };
+      next[facet].has(k) ? next[facet].delete(k) : next[facet].add(k);
+      return next;
+    });
+  }, []);
+
+  const getColor = useCallback((lot: Lot) => colorFor(lot.estado), [colorFor]);
+  const isVisible = useCallback(
+    (lot: Lot) => {
+      const okE = facets.estado.size === 0 || facets.estado.has(nrm(lot.estado));
+      const okU = facets.ubicacion.size === 0 || facets.ubicacion.has(nrm(lotField(lot, 'ubicacion')));
+      const okF = facets.financiamiento.size === 0 || facets.financiamiento.has(nrm(lot.financiamiento || ''));
+      const okC = facets.cuotas.size === 0 || facets.cuotas.has(nrm(lotField(lot, 'Cuotas')));
+      return okE && okU && okF && okC;
+    },
+    [facets],
+  );
 
   const selectedLot = selected ? lotsByCode.get(selected) ?? null : null;
   const hoverLot = hover ? lotsByCode.get(hover.id) ?? null : null;
@@ -91,8 +97,9 @@ export function DemoPage() {
         <div className="mb-5 flex items-start gap-3 rounded-lg border border-brand/30 bg-brand-soft/60 p-3.5 text-sm text-content-2">
           <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
           <p>
-            Datos de ejemplo, sin base de datos. Pasa el cursor o haz clic en un lote, alterna entre
-            <b> Estados</b> y <b>Financiamiento</b> en el panel, filtra y prueba el zoom.
+            Datos de ejemplo, sin base de datos. Usa la <b>leyenda flotante</b>: filtra por estado +
+            ubicación, o por financiamiento + cuotas (se combinan en tiempo real). Pasa el cursor por un
+            lote para ver su ficha.
           </p>
         </div>
 
@@ -103,44 +110,36 @@ export function DemoPage() {
           <KpiCard label="Tasa de venta" value={formatPercent(tasa, 0)} icon={TrendingUp} accent="warning" />
         </div>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <div className="relative h-[560px]">
-              <SvgCanvas
-                svgText={svgText}
-                lots={lots}
-                dimension={dimension}
-                colorFor={colorFor}
-                selected={selected}
-                activeValues={activeValues}
-                onSelect={setSelected}
-                onHover={setHover}
-              />
-              {hover && hoverLot && (
-                <LotTooltip lot={hoverLot} colorFor={colorFor} x={hover.x} y={hover.y} />
-              )}
-            </div>
-          </div>
-
-          <Card className="p-4">
-            <LegendPanel
-              dimension={dimension}
-              onDimensionChange={setDimension}
-              values={values}
+        {/* Plano con leyenda flotante */}
+        <div className="relative mt-6 h-[600px]">
+          <SvgCanvas
+            svgText={svgText}
+            lots={lots}
+            getColor={getColor}
+            isVisible={isVisible}
+            selected={selected}
+            onSelect={setSelected}
+            onHover={setHover}
+          />
+          {hover && hoverLot && <LotTooltip lot={hoverLot} colorFor={colorFor} x={hover.x} y={hover.y} />}
+          <div className="absolute right-3 top-3 z-10 flex max-h-[calc(100%-1.5rem)] w-80 max-w-[calc(100%-1.5rem)] animate-fade-in">
+            <FilterLegend
+              lots={lots}
               colorFor={colorFor}
-              activeValues={activeValues}
-              onToggleValue={toggleValue}
+              facets={facets}
+              onToggle={toggleFacet}
+              onClear={() => setFacets(emptyFacets())}
               search={search}
               onSearch={onSearch}
               selectedLot={selectedLot}
               onClearSelection={() => setSelected(null)}
               editable={!!selectedLot}
-              estadoOptions={estadoOptions}
-              financiamientoOptions={financiamientoOptions}
+              estadoOptions={['Disponible', 'Vendido']}
+              financiamientoOptions={['Contado', 'Financiamiento directo']}
               onChangeEstado={selectedLot ? (estado) => updateLot(selectedLot.id, { estado }) : undefined}
               onChangeFinanciamiento={selectedLot ? (financiamiento) => updateLot(selectedLot.id, { financiamiento: financiamiento || null }) : undefined}
             />
-          </Card>
+          </div>
         </div>
 
         <Card className="mt-6">

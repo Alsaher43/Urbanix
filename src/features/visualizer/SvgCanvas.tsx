@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ZoomIn, ZoomOut, Maximize2, Locate, RotateCcw, RotateCw, Maximize, Minimize } from 'lucide-react';
 import type { Lot } from '@/types';
-import type { Dimension } from '@/config/lotStatus';
 import { applyLotColors } from '@/utils/svg';
 import { cn } from '@/lib/cn';
 
@@ -17,20 +16,20 @@ const MAX_SCALE = 12;
 export function SvgCanvas({
   svgText,
   lots,
-  dimension,
-  colorFor,
+  getColor,
+  isVisible,
   selected,
-  activeValues,
   onSelect,
   onHover,
   fullscreenTargetRef,
 }: {
   svgText: string;
   lots: Lot[];
-  dimension: Dimension;
-  colorFor: (value: string) => string;
+  /** Color de cada lote (p. ej. por estado). */
+  getColor: (lot: Lot) => string;
+  /** ¿El lote pasa los filtros activos? Si no, se atenúa. */
+  isVisible: (lot: Lot) => boolean;
   selected: string | null;
-  activeValues?: Set<string> | null;
   onSelect: (id: string | null) => void;
   onHover: (payload: { id: string; x: number; y: number } | null) => void;
   /** Elemento a poner en pantalla completa (p. ej. lienzo + leyenda). Por defecto el propio lienzo. */
@@ -75,16 +74,13 @@ export function SvgCanvas({
     }
   }, [svgText]);
 
-  // (Re)aplica colores cuando cambian datos, dimensión, colores, selección o filtros.
+  // (Re)aplica colores/filtros cuando cambian datos, color, filtros o selección.
   useEffect(() => {
     const svg = svgHostRef.current?.querySelector('svg');
     if (svg) {
-      applyLotColors(svg as unknown as SVGElement, lots, dimension, colorFor, {
-        selected,
-        activeValues: activeValues ?? null,
-      });
+      applyLotColors(svg as unknown as SVGElement, lots, getColor, isVisible, { selected });
     }
-  }, [svgText, lots, dimension, colorFor, selected, activeValues]);
+  }, [svgText, lots, getColor, isVisible, selected]);
 
   const fsTarget = () => fullscreenTargetRef?.current ?? rootRef.current;
 

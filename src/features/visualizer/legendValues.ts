@@ -1,6 +1,10 @@
 import type { Lot } from '@/types';
 import { nrm, ESTADO_ORDER, type Dimension } from '@/config/lotStatus';
-import type { LegendValue } from './LegendPanel';
+
+export interface LegendValue {
+  value: string;
+  count: number;
+}
 
 const ESTADO_RANK = new Map(ESTADO_ORDER.map((label, i) => [nrm(label), i]));
 

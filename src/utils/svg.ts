@@ -1,5 +1,5 @@
 import type { Lot } from '@/types';
-import { nrm, type Dimension } from '@/config/lotStatus';
+import { nrm } from '@/config/lotStatus';
 
 /**
  * Motor de coloreado del plano SVG (alineado con el Valora real). El `lote_id`
@@ -52,21 +52,18 @@ function setFill(el: SVGElement, color: string) {
 
 export interface ApplyOptions {
   selected?: string | null;
-  /** Valores normalizados activos (filtro). Si se define, el resto se atenúa. */
-  activeValues?: Set<string> | null;
 }
 
-/** Devuelve el valor de la dimensión activa para un lote. */
-export function valueOf(lot: Lot, dimension: Dimension): string {
-  return dimension === 'estado' ? lot.estado : lot.financiamiento ?? '';
-}
-
-/** Colorea el SVG a partir de los lotes y la dimensión elegida. */
+/**
+ * Colorea el SVG. `getColor` decide el color de cada lote (p. ej. por estado);
+ * `isVisible` decide si el lote pasa los filtros activos (si no, se atenúa).
+ * Desacopla color y filtrado para soportar filtros facetados combinables.
+ */
 export function applyLotColors(
   svg: SVGElement,
   lots: Lot[],
-  dimension: Dimension,
-  colorFor: (value: string) => string,
+  getColor: (lot: Lot) => string,
+  isVisible: (lot: Lot) => boolean,
   options: ApplyOptions = {},
 ): { matched: number; total: number; indexed: number } {
   const index = buildSvgIndex(svg);
@@ -77,16 +74,14 @@ export function applyLotColors(
     if (!el) continue;
     matched++;
 
-    const value = valueOf(lot, dimension);
-    setFill(el, colorFor(value));
+    setFill(el, getColor(lot));
     el.style.cursor = 'pointer';
     el.dataset.lid = lot.id;
-    el.dataset.val = value;
 
-    const filtered = options.activeValues && value && !options.activeValues.has(nrm(value));
+    const visible = isVisible(lot);
     const selected = options.selected === lot.id;
 
-    el.style.opacity = filtered ? '0.07' : '1';
+    el.style.opacity = visible ? '1' : '0.07';
     el.style.stroke = selected ? 'rgb(99,102,241)' : '';
     el.style.strokeWidth = selected ? '2.5' : '';
   }

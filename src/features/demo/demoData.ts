@@ -42,20 +42,29 @@ const DEMO: DemoEntry[] = [
   { id: 'M-8', x: 274, y: 456, estado: 'Vendido', financiamiento: 'Financiamiento Directo', precio: 29500, cliente: 'Marta Ríos' },
 ];
 
+const UBICACIONES = ['Esquina', 'Calle', 'Avenida', 'Pasaje'];
+const CUOTAS = ['-12 meses', '12 meses', '24 meses', '36 meses', '+36 meses'];
+
 export function getDemoLots(): Lot[] {
-  return DEMO.map((d) => {
+  return DEMO.map((d, i) => {
     const [manzana, numStr] = d.id.split('-');
     const numero = Number(numStr) || 0;
+    const esDirecto = nrm(d.financiamiento) === 'financiamientodirecto';
     return {
       id: d.id,
       estado: d.estado,
       financiamiento: d.financiamiento,
       precio: d.precio,
-      descuento: nrm(d.financiamiento) === 'contado' ? 800 : 0,
+      descuento: nrm(d.financiamiento) === 'contado' ? 0.05 : 0,
       area: 120 + numero * 8,
       manzana,
       etapa: manzana === 'A' ? 'Etapa 1' : 'Etapa 2',
-      extra: { Cliente: d.cliente },
+      // ubicacion y Cuotas viven en `extra`, igual que en el Excel real.
+      extra: {
+        Cliente: d.cliente,
+        ubicacion: UBICACIONES[i % UBICACIONES.length],
+        Cuotas: esDirecto ? CUOTAS[i % CUOTAS.length] : '',
+      },
     } satisfies Lot;
   });
 }
