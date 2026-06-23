@@ -13,6 +13,28 @@ export interface Profile {
   nombre: string | null;
   rol: UserRole;
   avatar_url: string | null;
+  /** Inmobiliaria a la que pertenece (multi-tenant). Opcional para retrocompatibilidad. */
+  org_id?: string | null;
+  created_at: string;
+}
+
+export interface Organization {
+  id: string;
+  nombre: string;
+  created_at: string;
+}
+
+export interface AuditEntry {
+  id: string;
+  org_id: string | null;
+  user_id: string | null;
+  usuario: string;
+  project_id: string | null;
+  entity: string;
+  entity_id: string | null;
+  field: string;
+  old_value: string | null;
+  new_value: string | null;
   created_at: string;
 }
 

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Users, Search, Info, ShieldCheck, HardHat } from 'lucide-react';
-import { useProfiles, useUpdateRole } from '@/hooks/useUsers';
+import { Users, Search, Info, ShieldCheck, HardHat, Pencil, Check, X } from 'lucide-react';
+import { useProfiles, useUpdateRole, useUpdateProfileName } from '@/hooks/useUsers';
 import { useAuth } from '@/context/AuthContext';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card } from '@/components/ui/Card';
@@ -61,10 +61,7 @@ export function UsersPage() {
                 <div className="flex min-w-0 items-center gap-3">
                   <Avatar name={p.nombre} email={p.email} src={p.avatar_url} />
                   <div className="min-w-0">
-                    <p className="flex items-center gap-2 truncate font-medium text-content">
-                      {p.nombre || p.email.split('@')[0]}
-                      {p.id === user?.id && <Badge tone="neutral">Tú</Badge>}
-                    </p>
+                    <NameEditor id={p.id} nombre={p.nombre} email={p.email} isSelf={p.id === user?.id} />
                     <p className="truncate text-sm text-content-3">{p.email}</p>
                   </div>
                 </div>
@@ -83,6 +80,54 @@ export function UsersPage() {
         )}
       </Card>
     </>
+  );
+}
+
+/** Nombre con edición en línea (el gerente puede renombrar a sus usuarios). */
+function NameEditor({ id, nombre, email, isSelf }: { id: string; nombre: string | null; email: string; isSelf: boolean }) {
+  const update = useUpdateProfileName();
+  const [editing, setEditing] = useState(false);
+  const [val, setVal] = useState(nombre ?? '');
+  const display = nombre || email.split('@')[0];
+
+  const save = () => update.mutate({ id, nombre: val }, { onSuccess: () => setEditing(false) });
+
+  if (editing) {
+    return (
+      <div className="flex items-center gap-1.5">
+        <input
+          value={val}
+          autoFocus
+          onChange={(e) => setVal(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') save();
+            if (e.key === 'Escape') setEditing(false);
+          }}
+          className="h-7 w-40 rounded-md border border-brand bg-surface-2 px-2 text-sm text-content focus:outline-none"
+        />
+        <button onClick={save} disabled={update.isPending} className="rounded p-1 text-success hover:bg-surface-2" aria-label="Guardar">
+          <Check className="h-4 w-4" />
+        </button>
+        <button onClick={() => setEditing(false)} className="rounded p-1 text-content-3 hover:bg-surface-2" aria-label="Cancelar">
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <p className="flex items-center gap-2 font-medium text-content">
+      <span className="truncate">{display}</span>
+      {isSelf && <Badge tone="neutral">Tú</Badge>}
+      <button
+        onClick={() => { setVal(nombre ?? ''); setEditing(true); }}
+        className="shrink-0 rounded p-0.5 text-content-3 transition-colors hover:text-content"
+        title="Editar nombre"
+        aria-label="Editar nombre"
+      >
+        <Pencil className="h-3.5 w-3.5" />
+      </button>
+    </p>
   );
 }
 

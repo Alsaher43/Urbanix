@@ -20,6 +20,28 @@ export function useProfiles() {
   });
 }
 
+export function useUpdateProfileName() {
+  const qc = useQueryClient();
+  const { profile } = useAuth();
+  return useMutation({
+    mutationFn: async ({ id, nombre }: { id: string; nombre: string }) => {
+      const clean = nombre.trim();
+      if (clean.length < 2) throw new Error('El nombre debe tener al menos 2 caracteres.');
+      const { error } = await supabase.from('profiles').update({ nombre: clean }).eq('id', id);
+      if (error) throw new Error(getErrorMessage(error));
+      return { id, nombre: clean };
+    },
+    onSuccess: ({ nombre }) => {
+      qc.invalidateQueries({ queryKey: ['profiles'] });
+      void logActivity('create_user', `Actualizó el nombre de un usuario a "${nombre}"`, {
+        usuario: profile?.nombre || profile?.email || 'Gerente',
+      });
+      toast.success('Nombre actualizado');
+    },
+    onError: (e) => toast.error('No se pudo actualizar el nombre', getErrorMessage(e)),
+  });
+}
+
 export function useUpdateRole() {
   const qc = useQueryClient();
   const { profile, user } = useAuth();

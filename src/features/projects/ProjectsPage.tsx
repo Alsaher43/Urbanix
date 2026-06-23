@@ -6,7 +6,6 @@ import { useActiveProject } from '@/hooks/useActiveProject';
 import { useCreateProject } from '@/hooks/useProjects';
 import { useSvgFiles, useExcelFiles, useUploadSvg, useUploadExcel } from '@/hooks/useFiles';
 import { useUiStore } from '@/store/uiStore';
-import { useAuth } from '@/context/AuthContext';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardHeader, CardBody } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -14,7 +13,6 @@ import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { ManagerOnly } from '@/components/auth/RoleGate';
 import { Spinner } from '@/components/ui/Spinner';
 import { formatRelative, formatDateTime } from '@/lib/format';
 import { toast } from '@/store/toastStore';
@@ -22,7 +20,6 @@ import type { SvgFile, ExcelFile } from '@/types';
 import { cn } from '@/lib/cn';
 
 export function ProjectsPage() {
-  const { isManager } = useAuth();
   const { projects, project, projectId, setProject, hasProjects } = useActiveProject();
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -32,11 +29,9 @@ export function ProjectsPage() {
         title="Proyectos"
         description="Tus desarrollos inmobiliarios y sus archivos"
         actions={
-          <ManagerOnly>
-            <Button onClick={() => setCreateOpen(true)}>
-              <FolderPlus className="h-4 w-4" /> Nuevo proyecto
-            </Button>
-          </ManagerOnly>
+          <Button onClick={() => setCreateOpen(true)}>
+            <FolderPlus className="h-4 w-4" /> Nuevo proyecto
+          </Button>
         }
       />
 
@@ -44,8 +39,8 @@ export function ProjectsPage() {
         <EmptyState
           icon={FolderKanban}
           title="Aún no hay proyectos"
-          description={isManager ? 'Crea tu primer proyecto para empezar.' : 'Tu gerente aún no ha creado proyectos.'}
-          action={isManager ? <Button onClick={() => setCreateOpen(true)}><FolderPlus className="h-4 w-4" /> Crear proyecto</Button> : undefined}
+          description="Crea tu primer proyecto para empezar a cargar planos y lotes."
+          action={<Button onClick={() => setCreateOpen(true)}><FolderPlus className="h-4 w-4" /> Crear proyecto</Button>}
           className="mt-6"
         />
       ) : (
@@ -130,14 +125,14 @@ function FilesCard({ kind, projectId, title }: { kind: 'svg' | 'excel'; projectI
     <Card>
       <CardHeader
         title={title}
-        description={kind === 'svg' ? 'Lotes nombrados FILL_A-1, FILL_M-6…' : 'Columnas: Lote, TipoPrecio, Descuento, Estado'}
+        description={kind === 'svg' ? 'Lotes con id = lote_id (ej. A-1 o FILL_A-1)' : 'Columnas: lote_id, estado, precio, financiamiento'}
         action={
-          <ManagerOnly>
+          <>
             <Button variant="secondary" size="sm" loading={uploading} onClick={() => inputRef.current?.click()}>
               <UploadCloud className="h-4 w-4" /> Subir
             </Button>
             <input ref={inputRef} type="file" accept={accept} className="hidden" onChange={onPick} />
-          </ManagerOnly>
+          </>
         }
       />
       <CardBody className="pt-0">

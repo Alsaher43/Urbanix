@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase, getErrorMessage, isSupabaseConfigured } from '@/lib/supabase';
 import { logActivity } from '@/lib/activity';
+import { logAudit } from '@/lib/audit';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/store/toastStore';
 import { nrm, prettyLabel } from '@/config/lotStatus';
@@ -86,6 +87,11 @@ export function useSetLotStatus() {
           `cambió ${input.loteId} de ${prettyLabel(input.prevEstado || '—')} a ${prettyLabel(input.estado)}`,
           { projectId: input.projectId, usuario, metadata: { loteId: input.loteId } },
         );
+        void logAudit({
+          entity: 'lote', entityId: input.loteId, field: 'estado',
+          oldValue: input.prevEstado ?? null, newValue: input.estado,
+          projectId: input.projectId, usuario,
+        });
       }
       if (input.financiamiento !== undefined && nrm(input.financiamiento || '') !== nrm(input.prevFinanciamiento || '')) {
         void logActivity(
@@ -93,6 +99,11 @@ export function useSetLotStatus() {
           `cambió el financiamiento de ${input.loteId} a ${prettyLabel(input.financiamiento || '—')}`,
           { projectId: input.projectId, usuario, metadata: { loteId: input.loteId } },
         );
+        void logAudit({
+          entity: 'lote', entityId: input.loteId, field: 'financiamiento',
+          oldValue: input.prevFinanciamiento ?? null, newValue: input.financiamiento ?? null,
+          projectId: input.projectId, usuario,
+        });
       }
       toast.success('Lote actualizado', input.loteId);
     },

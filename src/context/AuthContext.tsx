@@ -20,6 +20,7 @@ interface AuthContextValue {
   loading: boolean;
   isConfigured: boolean;
   isManager: boolean;
+  orgId: string | null;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   requestPasswordReset: (email: string) => Promise<void>;
@@ -133,6 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       isConfigured: isSupabaseConfigured,
       isManager: profile?.rol === 'gerente',
+      orgId: profile?.org_id ?? null,
       signIn,
       signOut,
       requestPasswordReset,

@@ -2,12 +2,13 @@ import { NavLink } from 'react-router-dom';
 import { PanelLeftClose, PanelLeft, X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useUiStore } from '@/store/uiStore';
+import { useOrganization } from '@/hooks/useOrganization';
 import { visibleNavItems } from '@/config/navigation';
 import { ROLE_LABELS } from '@/types';
 import { Avatar } from '@/components/ui/Avatar';
 import { cn } from '@/lib/cn';
 
-function Logo({ collapsed }: { collapsed: boolean }) {
+function Logo({ collapsed, subtitle }: { collapsed: boolean; subtitle: string }) {
   return (
     <div className="flex h-[60px] items-center gap-2.5 px-4">
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand text-brand-fg">
@@ -16,9 +17,9 @@ function Logo({ collapsed }: { collapsed: boolean }) {
         </svg>
       </div>
       {!collapsed && (
-        <div className="leading-tight">
+        <div className="min-w-0 leading-tight">
           <p className="text-base font-bold tracking-tight text-content">Urbanix</p>
-          <p className="text-2xs text-content-3">Gestión Inmobiliaria</p>
+          <p className="truncate text-2xs text-content-3">{subtitle}</p>
         </div>
       )}
     </div>
@@ -27,6 +28,7 @@ function Logo({ collapsed }: { collapsed: boolean }) {
 
 export function Sidebar({ mobileOpen, onCloseMobile }: { mobileOpen: boolean; onCloseMobile: () => void }) {
   const { role, profile } = useAuth();
+  const { data: organization } = useOrganization();
   const collapsed = useUiStore((s) => s.sidebarCollapsed);
   const toggle = useUiStore((s) => s.toggleSidebar);
   const items = visibleNavItems(role);
@@ -47,7 +49,7 @@ export function Sidebar({ mobileOpen, onCloseMobile }: { mobileOpen: boolean; on
         )}
       >
         <div className="flex items-center justify-between">
-          <Logo collapsed={collapsed} />
+          <Logo collapsed={collapsed} subtitle={organization?.nombre ?? 'Gestión Inmobiliaria'} />
           <button
             onClick={onCloseMobile}
             className="mr-3 rounded-md p-1.5 text-content-3 hover:bg-surface-2 lg:hidden"

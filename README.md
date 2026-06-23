@@ -40,11 +40,23 @@ npm install
 ### 3. Configurar Supabase
 1. Crea un proyecto en Supabase.
 2. Ve a **SQL Editor → New query** y ejecuta **en orden** los archivos de
-   [`supabase/migrations/`](supabase/migrations): primero
-   [`0001_init.sql`](supabase/migrations/0001_init.sql) (tablas, RLS, triggers y bucket de Storage)
-   y luego [`0002_lot_overrides.sql`](supabase/migrations/0002_lot_overrides.sql) (edición de estados
-   in-app). Para ver cambios en vivo entre usuarios, añade `lot_overrides` a la publicación
+   [`supabase/migrations/`](supabase/migrations):
+   1. [`0001_init.sql`](supabase/migrations/0001_init.sql) — tablas, RLS, triggers y bucket de Storage.
+   2. [`0002_lot_overrides.sql`](supabase/migrations/0002_lot_overrides.sql) — edición de estados in-app.
+   3. [`0003_multitenant_audit.sql`](supabase/migrations/0003_multitenant_audit.sql) — multi-inmobiliaria
+      (organizaciones + RLS por org), permisos trabajador/gerente y auditoría. Es retrocompatible:
+      tus datos actuales se agrupan en una organización por defecto.
+
+   Para ver cambios en vivo entre usuarios, añade `lot_overrides` a la publicación
    `supabase_realtime` (Database → Replication).
+
+### 🏢 Multi-inmobiliaria (SaaS)
+Tras la migración 0003, cada usuario pertenece a una **inmobiliaria** y sus datos quedan aislados por
+RLS. Para dar de alta una **nueva empresa**: crea la organización
+(`insert into public.organizations (nombre) values ('…');`) y luego el usuario gerente en
+**Authentication → Users** con *User Metadata* `{ "org_id": "<id>", "rol": "gerente", "nombre": "…" }`;
+sus trabajadores se crean con `{ "org_id": "<misma-org>" }`. El **trabajador** puede crear proyectos
+y subir Excel/planos, pero **no** editar estados/precios/financiamientos (eso es solo del gerente).
 3. Ve a **Authentication → Users → Add user** y crea tu usuario gerente
    (el **primer** usuario registrado se convierte en GERENTE automáticamente).
 4. En **Project Settings → API** copia la *Project URL* y la *anon public key*.

@@ -14,7 +14,36 @@ type ProfileRow = {
   nombre: string | null;
   rol: UserRole;
   avatar_url: string | null;
+  org_id: string | null;
   created_at: string;
+};
+type OrganizationRow = { id: string; nombre: string; created_at: string };
+type OrganizationInsert = { id?: string; nombre: string; created_at?: string };
+type AuditLogRow = {
+  id: string;
+  org_id: string | null;
+  user_id: string | null;
+  usuario: string;
+  project_id: string | null;
+  entity: string;
+  entity_id: string | null;
+  field: string;
+  old_value: string | null;
+  new_value: string | null;
+  created_at: string;
+};
+type AuditLogInsert = {
+  id?: string;
+  org_id?: string | null;
+  user_id?: string | null;
+  usuario: string;
+  project_id?: string | null;
+  entity: string;
+  entity_id?: string | null;
+  field: string;
+  old_value?: string | null;
+  new_value?: string | null;
+  created_at?: string;
 };
 type ProjectRow = {
   id: string;
@@ -22,6 +51,7 @@ type ProjectRow = {
   descripcion: string | null;
   ubicacion: string | null;
   owner_id: string | null;
+  org_id: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -47,6 +77,7 @@ type ExcelFileRow = {
 type HistorialRow = {
   id: string;
   project_id: string | null;
+  org_id: string | null;
   usuario: string;
   accion: string;
   created_at: string;
@@ -55,6 +86,7 @@ type ActivityLogRow = {
   id: string;
   user_id: string | null;
   project_id: string | null;
+  org_id: string | null;
   accion: ActivityType;
   descripcion: string;
   metadata: Record<string, unknown> | null;
@@ -68,6 +100,7 @@ type ProfileInsert = {
   nombre?: string | null;
   rol?: UserRole;
   avatar_url?: string | null;
+  org_id?: string | null;
   created_at?: string;
 };
 type ProjectInsert = {
@@ -76,6 +109,7 @@ type ProjectInsert = {
   descripcion?: string | null;
   ubicacion?: string | null;
   owner_id?: string | null;
+  org_id?: string | null;
   created_at?: string;
   updated_at?: string;
 };
@@ -101,6 +135,7 @@ type ExcelFileInsert = {
 type HistorialInsert = {
   id?: string;
   project_id?: string | null;
+  org_id?: string | null;
   usuario: string;
   accion: string;
   created_at?: string;
@@ -109,6 +144,7 @@ type ActivityLogInsert = {
   id?: string;
   user_id?: string | null;
   project_id?: string | null;
+  org_id?: string | null;
   accion: ActivityType;
   descripcion: string;
   metadata?: Record<string, unknown> | null;
@@ -143,6 +179,8 @@ export type Database = {
       historial: { Row: HistorialRow; Insert: HistorialInsert; Update: Partial<HistorialInsert>; Relationships: [] };
       activity_logs: { Row: ActivityLogRow; Insert: ActivityLogInsert; Update: Partial<ActivityLogInsert>; Relationships: [] };
       lot_overrides: { Row: LotOverrideRow; Insert: LotOverrideInsert; Update: Partial<LotOverrideInsert>; Relationships: [] };
+      organizations: { Row: OrganizationRow; Insert: OrganizationInsert; Update: Partial<OrganizationInsert>; Relationships: [] };
+      audit_log: { Row: AuditLogRow; Insert: AuditLogInsert; Update: Partial<AuditLogInsert>; Relationships: [] };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
