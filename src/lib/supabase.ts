@@ -20,7 +20,7 @@ const anonKey = cleanEnv(import.meta.env.VITE_SUPABASE_ANON_KEY);
  */
 export const isSupabaseConfigured = Boolean(url && anonKey);
 
-export const SUPABASE_BUCKET = import.meta.env.VITE_SUPABASE_BUCKET || 'urbanix-files';
+export const SUPABASE_BUCKET = cleanEnv(import.meta.env.VITE_SUPABASE_BUCKET) || 'urbanix-files';
 
 /**
  * Cliente Supabase tipado. Usamos placeholders válidos cuando no está
