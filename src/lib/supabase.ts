@@ -1,8 +1,17 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
 
-const url = import.meta.env.VITE_SUPABASE_URL;
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+/**
+ * Limpia el valor de una variable de entorno: quita un BOM inicial (U+FEFF),
+ * marcas de orden y espacios. Evita el error "String contains non ISO-8859-1
+ * code point" que ocurre si la clave llega con un BOM invisible (p. ej. por la
+ * codificación al guardarla en el hosting), ya que va en cabeceras HTTP.
+ */
+const cleanEnv = (v: string | undefined): string =>
+  (v ?? '').replace(/[​-‍﻿]/g, '').trim();
+
+const url = cleanEnv(import.meta.env.VITE_SUPABASE_URL);
+const anonKey = cleanEnv(import.meta.env.VITE_SUPABASE_ANON_KEY);
 
 /**
  * `isSupabaseConfigured` permite que la app arranque y muestre un estado

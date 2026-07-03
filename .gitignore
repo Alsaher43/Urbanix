@@ -10,8 +10,6 @@ dist-ssr
 
 # TypeScript build artifacts
 *.tsbuildinfo
-vite.config.js
-vite.config.d.ts
 
 # Environment
 .env
@@ -40,3 +38,5 @@ logs
 # Supabase local
 supabase/.branches
 supabase/.temp
+.vercel
+.env*
